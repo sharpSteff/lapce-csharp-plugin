@@ -10,7 +10,7 @@ language = ["Csharp"]
 workspace-contains = ["*/*.cs"]
 
 [config."volt.serverPath"]
-default = ""
+default = "OmniSharp"
 description = "Path to custom LSP executable"
 
 [config."volt.serverArgs"]
