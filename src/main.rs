@@ -22,19 +22,19 @@ register_plugin!(State);
 fn initialize(params: InitializeParams) -> Result<()> {
     let document_selector: DocumentSelector = vec![DocumentFilter {
         // lsp language id
-        language: Some(String::from("language_id")),
+        language: Some(String::from("csharp")),
         // glob pattern
-        pattern: Some(String::from("**/*.{ext1,ext2}")),
+        pattern: Some(String::from("**/*.{cs,csx}")),
         // like file:
         scheme: None,
     }];
-    let mut server_args = vec![];
+    // let mut server_args = vec![];
 
     // Check for user specified LSP server path
     // ```
-    // [lapce-plugin-name.lsp]
+    // [lapce-plugin-csharp.lsp]
     // serverPath = "[path or filename]"
-    // serverArgs = ["--arg1", "--arg2"]
+    let mut server_args = vec![String::from("--languageserver")];
     // ```
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(lsp) = options.get("lsp") {
@@ -68,36 +68,17 @@ fn initialize(params: InitializeParams) -> Result<()> {
         }
     }
 
-    // Architecture check
-    let _ = match VoltEnvironment::architecture().as_deref() {
-        Ok("x86_64") => "x86_64",
-        Ok("aarch64") => "aarch64",
-        _ => return Ok(()),
-    };
-
-    // OS check
-    let _ = match VoltEnvironment::operating_system().as_deref() {
-        Ok("macos") => "macos",
-        Ok("linux") => "linux",
-        Ok("windows") => "windows",
-        _ => return Ok(()),
-    };
-
-    // Download URL
-    // let _ = format!("https://github.com/<name>/<project>/releases/download/<version>/{filename}");
-
-    // see lapce_plugin::Http for available API to download files
-
+    let file_name = "OmniSharp";
     let _ = match VoltEnvironment::operating_system().as_deref() {
         Ok("windows") => {
-            format!("{}.exe", "[filename]")
+            format!("{}.exe", file_name)
         }
-        _ => "[filename]".to_string(),
+        _ => file_name.to_owned(),
     };
 
     // Plugin working directory
     let volt_uri = VoltEnvironment::uri()?;
-    let server_uri = Url::parse(&volt_uri)?.join("[filename]")?;
+    let server_uri = Url::parse(&volt_uri)?.join(file_name)?;
 
     // if you want to use server from PATH
     // let server_uri = Url::parse(&format!("urn:{filename}"))?;
