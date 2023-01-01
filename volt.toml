@@ -6,16 +6,16 @@ description = "C# for lapce using OmniSharp"
 wasm = "target/wasm32-wasi/release/lapce-plugin-csharp.wasm"
 
 [activation]
-language = []
-workspace-contains = []
+language = ["Csharp"]
+workspace-contains = ["*/*.cs"]
 
-#[config."volt.serverPath"]
-#default = "OmniSharp"
-#description = "Path to custom LSP executable"
+[config."volt.serverPath"]
+default = ""
+description = "Path to custom LSP executable"
 
-# [config."volt.serverArgs"]
-# default = []
-# description = ""
+[config."volt.serverArgs"]
+default = ["--languageserver"]
+description = "LSP server arguments to pass when launching"
 
 # [config."lspSettingArray"]
 # default = []
