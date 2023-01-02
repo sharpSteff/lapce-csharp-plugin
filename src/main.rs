@@ -53,8 +53,6 @@ fn initialize(params: InitializeParams) -> Result<()> {
             if let Some(server_path) = volt.get("serverPath") {
                 if let Some(server_path) = server_path.as_str() {
                     if !server_path.is_empty() {
-
-                        PLUGIN_RPC.window_log_message(MessageType::INFO, format!("Starting LSP on {server_path}"));
                         let server_uri = ok!(Url::parse(&format!("urn:{}", server_path)));
                         PLUGIN_RPC.start_lsp(
                             server_uri,
