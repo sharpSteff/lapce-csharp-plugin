@@ -1,5 +1,5 @@
 name = "csharp"
-version = "1.0.4"
+version = "1.0.5"
 author = "sharpSteff"
 display-name = "C#"
 description = "C# for lapce using OmniSharp"
@@ -7,7 +7,7 @@ wasm = "target/wasm32-wasi/release/lapce-plugin-csharp.wasm"
 
 [activation]
 language = ["csharp"]
-workspace-contains = ["*/*.cs"]
+workspace-contains = ["*/*.cs", "*/*.sln"]
 
 [config."volt.serverPath"]
 default = "OmniSharp"
