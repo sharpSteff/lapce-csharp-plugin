@@ -1,7 +1,7 @@
 [package]
 edition = "2021"
 name = "lapce-plugin-csharp"
-version = "1.0.2"
+version = "1.0.3"
 resolver = "2"
 
 [target.'cfg(target_os = "wasi")'.dependencies]
