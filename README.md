@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Install `OmniSharp` and `dotnet-sdk` 
+Install `OmniSharp` and `dotnet-sdk`
 Server needs to be included in `PATH` environment variable
 
 ```shell
