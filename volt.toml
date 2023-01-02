@@ -6,7 +6,7 @@ description = "C# for lapce using OmniSharp"
 wasm = "target/wasm32-wasi/release/lapce-plugin-csharp.wasm"
 
 [activation]
-language = ["Csharp"]
+language = ["csharp"]
 workspace-contains = ["*/*.cs"]
 
 [config."volt.serverPath"]
