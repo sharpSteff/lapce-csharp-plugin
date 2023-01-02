@@ -69,14 +69,10 @@ fn initialize(params: InitializeParams) -> Result<()> {
         }
     }
 
-    let file_name = match VoltEnvironment::operating_system().as_deref() {
-        Ok("windows") => "OmniSharp.exe",
-        _ => "OmniSharp",
+    let server_uri = match VoltEnvironment::operating_system().as_deref() {
+        | Ok("windows") => ok!(Url::parse("urn:OmniSharp.exe")),
+        | _ => ok!(Url::parse("urn:OmniSharp")),
     };
-
-    PLUGIN_RPC.window_log_message(MessageType::INFO, format!("Starting LSP on {file_name}"));
-    // Plugin working directory
-    let server_uri = Url::parse(file_name)?;
 
     PLUGIN_RPC.start_lsp(
         server_uri,
