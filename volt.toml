@@ -1,5 +1,5 @@
 name = "csharp"
-version = "1.0.3"
+version = "1.0.4"
 author = "sharpSteff"
 display-name = "C#"
 description = "C# for lapce using OmniSharp"
