@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use lapce_plugin::{
     psp_types::{
-        lsp_types::{request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, Url, MessageType},
+        lsp_types::{request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, Url},
         Request,
     },
     register_plugin, LapcePlugin, VoltEnvironment, PLUGIN_RPC,
