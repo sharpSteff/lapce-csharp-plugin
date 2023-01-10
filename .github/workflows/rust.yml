@@ -41,4 +41,4 @@ jobs:
     - name: Publish plugin
       env:
          LAPCE_TOKEN: ${{ secrets.VOLTS_API_KEY }}
-      run: volts --token $LAPCE_TOKEN && volts publish
+      run: volts publish --token $LAPCE_TOKEN
