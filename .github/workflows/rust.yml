@@ -30,6 +30,8 @@ jobs:
             target/            
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
+    - name: Setup rust
+      run: rustup target add wasm32-wasi
     - name: Build
       run: cargo build --verbose
     - name: Run tests
