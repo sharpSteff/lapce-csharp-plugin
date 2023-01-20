@@ -30,7 +30,7 @@ macro_rules! ok {
 fn initialize(params: InitializeParams) -> Result<()> {
     let document_selector: DocumentSelector = vec![DocumentFilter {
         language: Some(string!("csharp")),
-        pattern: Some(string!("**/*.cs")),
+        pattern: Some(string!("**/*.{cs,csx}")),
         scheme: None,
     }];
     let mut server_args = vec![string!("--languageserver")];

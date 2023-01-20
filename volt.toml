@@ -1,5 +1,5 @@
 name = "csharp"
-version = "1.0.8"
+version = "1.1.0"
 author = "sharpSteff"
 display-name = "C#"
 description = "C# for lapce using OmniSharp"
@@ -9,7 +9,7 @@ repository = "https://github.com/sharpSteff/lapce-csharp-plugin.git"
 
 [activation]
 language = ["csharp"]
-workspace-contains = ["*/*.cs", "*/*.sln", "*/omnisharp.json"]
+workspace-contains = ["*/*.csx", "*/*.cs", "*/*.sln", "*/omnisharp.json"]
 
 [config."volt.serverPath"]
 default = ""
