@@ -16,8 +16,8 @@ default = ""
 description = "Path to custom LSP executable"
 
 [config."volt.serverArgs"]
-#default = ["--languageserver"]
-#description = "LSP server arguments to pass when launching"
+default = [""]
+description = "LSP server arguments to pass when launching"
 
 # [config."lspSettingArray"]
 # default = []
