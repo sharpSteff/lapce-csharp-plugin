@@ -33,7 +33,9 @@ fn initialize(params: InitializeParams) -> Result<()> {
         pattern: Some(string!("**/*.{cs,csx}")),
         scheme: None,
     }];
-    let mut server_args = vec![string!("--languageserver")];
+    eprintln!("[lapce-csharp] starting plugin");
+
+    let mut server_args = vec![string!("")];
 
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(volt) = options.get("volt") {
@@ -68,10 +70,12 @@ fn initialize(params: InitializeParams) -> Result<()> {
     }
 
     let server_uri = match VoltEnvironment::operating_system().as_deref() {
-        | Ok("windows") => ok!(Url::parse("urn:OmniSharp.exe")),
-        | _ => ok!(Url::parse("urn:OmniSharp")),
+        | Ok("windows") => ok!(Url::parse("urn:csharp-ls")),
+        | _ => ok!(Url::parse("urn:csharp-ls")),
     };
 
+    let args = format!("{:?}", server_args);
+    eprintln!("[lapce-csharp] starting plugin with arguments {args}");
     PLUGIN_RPC.start_lsp(
         server_uri,
         server_args,
