@@ -1,7 +1,7 @@
 use std::{
     fs::{self, File},
     io::{self, Read, Write},
-    path::PathBuf, borrow::Borrow,
+    path::PathBuf,
 };
 
 use anyhow::{anyhow, Result};
@@ -85,7 +85,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
 
     // Check for the latest release version
     let release_url = "https://api.github.com/repos/OmniSharp/omnisharp-roslyn/releases/latest";
-    let mut resp = ok!(Http::get(&release_url));
+    let mut resp = ok!(Http::get(release_url));
     PLUGIN_RPC.stderr(&format!("STATUS_CODE: {:?}", resp.status_code));
     let body = ok!(resp.body_read_all());
     let raw_string = String::from_utf8(body).unwrap();
@@ -145,7 +145,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
             } else {
                 if let Some(p) = outpath.parent() {
                     if !p.exists() {
-                        ok!(fs::create_dir_all(&p));
+                        ok!(fs::create_dir_all(p));
                     }
                 }
                 let mut outfile = ok!(File::create(&outpath));
