@@ -9,7 +9,7 @@ repository = "https://github.com/sharpSteff/lapce-csharp-plugin.git"
 
 [activation]
 language = ["csharp"]
-workspace-contains = ["*/*.csx", "*/*.csproj", "*/*.sln"]
+workspace-contains = ["*/*.csx", "*/*.cs", "*/*.sln"]
 
 [config."volt.serverPath"]
 default = ""
@@ -18,6 +18,11 @@ description = "Path to custom LSP executable"
 [config."volt.serverArgs"]
 default = [""]
 description = "LSP server arguments to pass when launching"
+
+[config."csharp.solution"]
+default = ""
+description = "Path to the solution file"
+
 
 # [config."lspSettingArray"]
 # default = []

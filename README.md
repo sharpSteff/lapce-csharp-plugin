@@ -8,3 +8,9 @@ Server needs to be included in `PATH` environment variable
 ```shell
 dotnet tool install --global csharp-ls
 ```
+
+```toml
+[lapce-csharp.volt]
+serverPath = "<custom executable>"
+serverArgs = ["--languageserver"] # --languageserver is required for OmniSharp
+```
