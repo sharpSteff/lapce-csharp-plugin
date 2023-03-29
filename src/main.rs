@@ -88,10 +88,10 @@ fn initialize(params: InitializeParams) -> Result<()> {
     let mut resp = ok!(Http::get(&release_url));
     PLUGIN_RPC.stderr(&format!("STATUS_CODE: {:?}", resp.status_code));
     let body = ok!(resp.body_read_all());
-    let rawString = String::from_utf8(body).unwrap();
+    let raw_string = String::from_utf8(body).unwrap();
 
     // Parse the response body as JSON
-    let json = serde_json::from_str::<serde_json::Value>(&rawString).unwrap();
+    let json = serde_json::from_str::<serde_json::Value>(&raw_string).unwrap();
     let latest_version = json["tag_name"].as_str().unwrap();
 
     let architecture = match VoltEnvironment::architecture().as_deref() {
