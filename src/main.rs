@@ -1,6 +1,6 @@
 use std::{
-    fs::{self, File},
-    io::{self, Read, Write},
+    fs::{self, File, OpenOptions},
+    io::{self, Read, Write, BufWriter},
     path::PathBuf,
 };
 
@@ -74,6 +74,14 @@ fn initialize(params: InitializeParams) -> Result<()> {
         }
     }
 
+    let mut file = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("csharp_plugin.log")
+        .expect("failed to open file");
+
+    writeln!(file, "Reading installed omnisharp version").unwrap();
+
     // check last omnisharp version
     let mut last_ver = ok!(fs::OpenOptions::new()
         .create(true)
@@ -83,12 +91,18 @@ fn initialize(params: InitializeParams) -> Result<()> {
     let mut installed_version = String::new();
     ok!(last_ver.read_to_string(&mut installed_version));
 
+    writeln!(file, "Last installed version {}", installed_version).unwrap();
+
     // Check for the latest release version
-    let release_url = "https://api.github.com/repos/OmniSharp/omnisharp-roslyn/releases/latest";
+    let release_url = "https://api.github.com/repos/OmniSharp/omnisharp-roslyn/releases/latest?user-agent=Lapce";
+
     let mut resp = ok!(Http::get(release_url));
     PLUGIN_RPC.stderr(&format!("STATUS_CODE: {:?}", resp.status_code));
+    writeln!(file, "Check on github Status: {}", resp.status_code).unwrap();
     let body = ok!(resp.body_read_all());
     let raw_string = String::from_utf8(body).unwrap();
+
+    writeln!(file, "Github Response: {}", raw_string).unwrap();
 
     // Parse the response body as JSON
     let json = serde_json::from_str::<serde_json::Value>(&raw_string).unwrap();
