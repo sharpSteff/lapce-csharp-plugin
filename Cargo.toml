@@ -8,7 +8,7 @@ resolver = "2"
 # plugin deps
 
 # for unpacking zip
-# zip = { version = "0.6", default-features = false, features = ["deflate"] }
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
 
 # for unpacking tar/gz
 # flate2 = { version = "1.0" }
