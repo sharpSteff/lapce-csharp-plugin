@@ -75,7 +75,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
         if let Some(csharp) = options.get("csharp") {
             if let Some(solution) = csharp.get("solution") {
                 if let Some(arg) = solution.as_str() {
-                    let solution_arg = "-s " + arg;
+                    let solution_arg = format!("-s {arg}");
                     server_args.push(solution_arg);
                 }
             }
@@ -87,8 +87,6 @@ fn initialize(params: InitializeParams) -> Result<()> {
         | _ => ok!(Url::parse("urn:csharp-ls")),
     };
 
-    //let args = format!("{:?}", server_args);
-    // eprintln!("[lapce-csharp] starting plugin {server_uri} with arguments {args}");
     PLUGIN_RPC.start_lsp(
         server_uri,
         server_args,
