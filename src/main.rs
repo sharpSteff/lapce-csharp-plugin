@@ -128,8 +128,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
         Err(e) => return Err(anyhow!("Error OS: {}", e)),
     };
 
-    let zip_path = PathBuf::from(zip_file.clone());
-    let server_path = zip_path.join("OmniSharp");
+    let mut server_path =  PathBuf::from("bin");
 
     // Compare versions and download if necessary
     if installed_version != latest_version {
@@ -151,8 +150,16 @@ fn initialize(params: InitializeParams) -> Result<()> {
         let body = ok!(resp.body_read_all());
         ok!(fs::write(&zip_file, body));
 
+        match fs::create_dir_all(&server_path) {
+            Ok(_) => {},
+            Err(e) =>{
+                self::log(&mut file, &format!("Failed to create dir {} {}", server_path.to_str().unwrap(), e));
+                panic!("Unable to create dir");
+            },
+        }
+
         let mut zip = ok!(ZipArchive::new(ok!(File::open(&zip_file))));
-        match zip.extract(server_path.clone()) {
+        match zip.extract(&server_path) {
             Ok(()) => self::log(&mut file, "Zip file extracted successfully"),
             Err(e) => {
                 self::log(&mut file, &format!("Failed to extract zip file: {}", e));
@@ -162,14 +169,24 @@ fn initialize(params: InitializeParams) -> Result<()> {
 
         ok!(fs::remove_file(&zip_file));
         ok!(last_ver.write_all(latest_version.as_bytes()));
+    } else {
+        self::log(&mut file, "No new version found!");
     }
 
     let volt_uri = ok!(VoltEnvironment::uri());
+ 
+    server_path = match VoltEnvironment::operating_system().as_deref() {
+        | Ok("windows") => server_path.join("OmniSharp.exe"),
+        | _ => server_path.join("OmniSharp"),
+    };
+
     let server_path_string = match server_path.to_str() {
         | Some(v) => v,
         | None => return Err(anyhow!("server_path.to_str() failed")),
     };
+
     let server_uri = ok!(ok!(Url::parse(&volt_uri)).join(server_path_string));
+    self::log(&mut file, &format!("Starting OmniSharp from {}", server_uri));
 
     PLUGIN_RPC.start_lsp(
         server_uri,
