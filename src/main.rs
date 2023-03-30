@@ -1,14 +1,15 @@
 use std::{
     fs::{self, File, OpenOptions},
     io::{Read, Write},
-    path::PathBuf, time::SystemTime,
+    path::{PathBuf}, time::SystemTime,
 };
 
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Utc};
+
 use lapce_plugin::{
     psp_types::{
-        lsp_types::{request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, Url},
+        lsp_types::{request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, Url, MessageType},
         Request,
     },
     register_plugin, Http, LapcePlugin, VoltEnvironment, PLUGIN_RPC,
@@ -42,6 +43,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
         pattern: Some(string!("**/*.{cs,csx}")),
         scheme: None,
     }];
+
     let mut server_args = vec![string!("--languageserver")];
 
     if let Some(options) = params.initialization_options.as_ref() {
@@ -110,6 +112,16 @@ fn initialize(params: InitializeParams) -> Result<()> {
     let latest_version = json["tag_name"].as_str().unwrap();
 
     self::log(&mut file, &format!("Lastest version {}", latest_version));
+
+    if let Some(workspace_folder) = params.root_uri  {
+        self::log(&mut file, &format!("Workspace: {}", &workspace_folder));
+        if let Some(solution) = look_for_solution(&mut file, &workspace_folder.to_file_path().unwrap()){
+            self::log(&mut file, &format!("Found solution: {}", &solution.display()));
+            let solution_string = solution.to_str().unwrap();
+            let solution_arg = format!("-s {solution_string}");
+            server_args.push(solution_arg);
+        }
+    }
 
     let architecture = match VoltEnvironment::architecture().as_deref() {
         Ok("x86_64") => "x64",
@@ -186,7 +198,8 @@ fn initialize(params: InitializeParams) -> Result<()> {
     };
 
     let server_uri = ok!(ok!(Url::parse(&volt_uri)).join(server_path_string));
-    self::log(&mut file, &format!("Starting OmniSharp from {}", server_uri));
+    let args_string = server_args.join(" ");
+    self::log(&mut file, &format!("Starting OmniSharp from {} with args {}", server_uri, args_string));
 
     PLUGIN_RPC.start_lsp(
         server_uri,
@@ -196,6 +209,37 @@ fn initialize(params: InitializeParams) -> Result<()> {
     );
 
     Ok(())
+}
+
+fn look_for_solution(file: &mut File, workspace: &PathBuf) -> Option<PathBuf> {
+    self::log(file, &format!("Look for solution in: {}", &workspace.display()));
+    let path = PathBuf::from(workspace);
+    return find_first_sln_file(file, &path);
+}
+
+fn find_first_sln_file(file: &mut File, dir_path: &PathBuf) -> Option<PathBuf> {
+    self::log(file, &format!("Look for solution in: {}", &dir_path.display()));
+    match fs::read_dir(dir_path) {
+        Ok(entries) => {
+            self::log(file, &format!("Look for solution in: {}", &dir_path.display()));
+            for entry in entries {
+                let path = entry.unwrap().path();
+                self::log(file, &format!("Look for solution in: {}", &path.display()));
+                if path.is_file() && path.extension().unwrap_or_default() == "sln" {
+                    return Some(path);
+                } else if path.is_dir() {
+                    if let Some(sub_sln_file) = find_first_sln_file(file, &path) {
+                        return Some(sub_sln_file);
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            self::log(file, &format!("Look for solution in: {} with error {}", &dir_path.display(), e));
+            return Some(dir_path.clone());
+        },
+    } 
+    None
 }
 
 fn log(file: &mut File, message: &str) {
@@ -222,7 +266,8 @@ impl LapcePlugin for State {
             Initialize::METHOD => {
                 let params: InitializeParams = serde_json::from_value(params).unwrap();
                 if let Err(e) = initialize(params) {
-                    PLUGIN_RPC.stderr(&format!("plugin returned with error: {e}"))
+                    PLUGIN_RPC.window_log_message(MessageType::ERROR, e.to_string());
+                    PLUGIN_RPC.window_show_message(MessageType::ERROR, e.to_string());
                 }
             }
             _ => {}
