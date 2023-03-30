@@ -96,7 +96,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
     self::log(&mut file, &format!("Last installed version {}", installed_version));
 
     // Check for the latest release version
-    let release_url = "https://api.github.com/repos/OmniSharp/omnisharp-roslyn/releases/latest?user-agent=Lapce";
+    let release_url = "https://api.github.com/repos/OmniSharp/omnisharp-roslyn/releases/latest";
 
     let mut resp = ok!(self::get(release_url));
     PLUGIN_RPC.stderr(&format!("STATUS_CODE: {:?}", resp.status_code));
