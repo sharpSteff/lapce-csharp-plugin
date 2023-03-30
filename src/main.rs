@@ -1,10 +1,11 @@
 use std::{
     fs::{self, File, OpenOptions},
-    io::{self, Read, Write, BufWriter},
-    path::PathBuf,
+    io::{Read, Write},
+    path::PathBuf, time::SystemTime,
 };
 
 use anyhow::{anyhow, Result};
+use chrono::{DateTime, Utc};
 use lapce_plugin::{
     psp_types::{
         lsp_types::{request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, Url},
@@ -14,6 +15,7 @@ use lapce_plugin::{
 };
 use serde_json::Value;
 use zip::ZipArchive;
+use wasi_experimental_http::Response;
 
 #[derive(Default)]
 struct State {}
@@ -80,7 +82,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
         .open("csharp_plugin.log")
         .expect("failed to open file");
 
-    writeln!(file, "Reading installed omnisharp version").unwrap();
+    self::log(&mut file, "Reading installed omnisharp version");
 
     // check last omnisharp version
     let mut last_ver = ok!(fs::OpenOptions::new()
@@ -91,22 +93,23 @@ fn initialize(params: InitializeParams) -> Result<()> {
     let mut installed_version = String::new();
     ok!(last_ver.read_to_string(&mut installed_version));
 
-    writeln!(file, "Last installed version {}", installed_version).unwrap();
+    self::log(&mut file, &format!("Last installed version {}", installed_version));
 
     // Check for the latest release version
     let release_url = "https://api.github.com/repos/OmniSharp/omnisharp-roslyn/releases/latest?user-agent=Lapce";
 
-    let mut resp = ok!(Http::get(release_url));
+    let mut resp = ok!(self::get(release_url));
     PLUGIN_RPC.stderr(&format!("STATUS_CODE: {:?}", resp.status_code));
-    writeln!(file, "Check on github Status: {}", resp.status_code).unwrap();
+    self::log(&mut file, &format!("Response Status: {}", resp.status_code));
+
     let body = ok!(resp.body_read_all());
     let raw_string = String::from_utf8(body).unwrap();
-
-    writeln!(file, "Github Response: {}", raw_string).unwrap();
 
     // Parse the response body as JSON
     let json = serde_json::from_str::<serde_json::Value>(&raw_string).unwrap();
     let latest_version = json["tag_name"].as_str().unwrap();
+
+    self::log(&mut file, &format!("Lastest version {}", latest_version));
 
     let architecture = match VoltEnvironment::architecture().as_deref() {
         Ok("x86_64") => "x64",
@@ -136,35 +139,25 @@ fn initialize(params: InitializeParams) -> Result<()> {
         // Download and extract the latest release
         // https://github.com/OmniSharp/omnisharp-roslyn/releases/download/latest/omnisharp-osx-x64-net6.0.zip
         let download_url = format!(
-            "https://github.com/OmniSharp/omnisharp-roslyn/releases/download/{}/omnisharp-{}",
+            "https://github.com/OmniSharp/omnisharp-roslyn/releases/download/{}/{}",
             latest_version, zip_file
         );
 
+        self::log(&mut file, &format!("Download file from {} to {}", download_url, zip_file));
+
         let mut resp = ok!(Http::get(&download_url));
         PLUGIN_RPC.stderr(&format!("STATUS_CODE: {:?}", resp.status_code));
+        self::log(&mut file, &format!("Response Status: {}", resp.status_code));
         let body = ok!(resp.body_read_all());
         ok!(fs::write(&zip_file, body));
 
         let mut zip = ok!(ZipArchive::new(ok!(File::open(&zip_file))));
-
-        for i in 0..zip.len() {
-            let mut file = ok!(zip.by_index(i));
-            let outpath = match file.enclosed_name() {
-                Some(path) => path.to_owned(),
-                None => continue,
-            };
-
-            if (*file.name()).ends_with('/') {
-                ok!(fs::create_dir_all(&outpath));
-            } else {
-                if let Some(p) = outpath.parent() {
-                    if !p.exists() {
-                        ok!(fs::create_dir_all(p));
-                    }
-                }
-                let mut outfile = ok!(File::create(&outpath));
-                ok!(io::copy(&mut file, &mut outfile));
-            }
+        match zip.extract(server_path.clone()) {
+            Ok(()) => self::log(&mut file, "Zip file extracted successfully"),
+            Err(e) => {
+                self::log(&mut file, &format!("Failed to extract zip file: {}", e));
+                panic!("Unable to extract zip file");
+            },
         }
 
         ok!(fs::remove_file(&zip_file));
@@ -186,6 +179,23 @@ fn initialize(params: InitializeParams) -> Result<()> {
     );
 
     Ok(())
+}
+
+fn log(file: &mut File, message: &str) {
+    let timestamp = DateTime::<Utc>::from(SystemTime::now());
+    let timestamp_str = timestamp.format("%Y-%m-%d %H:%M:%S").to_string();
+
+    writeln!(file, "[{}] {}", timestamp_str, message).unwrap();
+}
+
+fn get(url: &str) -> Result<Response> {
+    let req = http::request::Builder::new()
+        .method(http::Method::GET)
+        .header("User-Agent", "Lapce")
+        .uri(url)
+        .body(None)?;
+    let resp = wasi_experimental_http::request(req)?;
+    Ok(resp)
 }
 
 impl LapcePlugin for State {
