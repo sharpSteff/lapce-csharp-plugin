@@ -111,7 +111,6 @@ fn initialize(params: InitializeParams) -> Result<()> {
 fn log(file: &mut File, message: &str) {
     let timestamp = DateTime::<Utc>::from(SystemTime::now());
     let timestamp_str = timestamp.format("%Y-%m-%d %H:%M:%S").to_string();
-
     writeln!(file, "[{}] {}", timestamp_str, message).unwrap();
 }
 
