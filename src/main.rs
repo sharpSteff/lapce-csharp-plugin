@@ -1,4 +1,8 @@
-use std::{fs::{OpenOptions, File}, time::SystemTime};
+use std::{
+    fs::{File, OpenOptions},
+    io::{Read, Write}, time::SystemTime,
+};
+
 
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Utc};
@@ -33,7 +37,7 @@ macro_rules! ok {
 fn initialize(params: InitializeParams) -> Result<()> {
     let document_selector: DocumentSelector = vec![DocumentFilter {
         language: Some(string!("csharp")),
-        pattern: Some(string!("**/*.{cs,csx}")),
+        pattern: Some(string!("**/*.cs")),
         scheme: None,
     }];
 
@@ -42,8 +46,6 @@ fn initialize(params: InitializeParams) -> Result<()> {
     .create(true)
     .open("csharp_plugin.log")
     .expect("failed to open file");
-
-    self::log(&mut file, "Reading installed omnisharp version");
 
     let mut server_args = vec![];
 
@@ -97,6 +99,8 @@ fn initialize(params: InitializeParams) -> Result<()> {
         | Ok("windows") => ok!(Url::parse("urn:csharp-ls")),
         | _ => ok!(Url::parse("urn:csharp-ls")),
     };
+
+    self::log(&mut file, "Reading installed omnisharp version");
 
     PLUGIN_RPC.start_lsp(
         server_uri,
