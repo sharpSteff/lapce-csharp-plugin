@@ -100,6 +100,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
         | _ => ok!(Url::parse("urn:csharp-ls")),
     };
 
+    let args_string = server_args.join(" ");
     self::log(&mut file, &format!("Starting csharp-ls from {} with args {}", server_uri, args_string));
 
     PLUGIN_RPC.start_lsp(
