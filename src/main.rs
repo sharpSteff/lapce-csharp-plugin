@@ -1,4 +1,4 @@
-use std::fs::OpenOptions;
+use std::fs::{OpenOptions, File};
 
 use anyhow::{anyhow, Result};
 use lapce_plugin::{
@@ -105,6 +105,13 @@ fn initialize(params: InitializeParams) -> Result<()> {
     );
 
     Ok(())
+}
+
+fn log(file: &mut File, message: &str) {
+    let timestamp = DateTime::<Utc>::from(SystemTime::now());
+    let timestamp_str = timestamp.format("%Y-%m-%d %H:%M:%S").to_string();
+
+    writeln!(file, "[{}] {}", timestamp_str, message).unwrap();
 }
 
 impl LapcePlugin for State {
