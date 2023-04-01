@@ -100,7 +100,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
         | _ => ok!(Url::parse("urn:csharp-ls")),
     };
 
-    self::log(&mut file, "Reading installed omnisharp version");
+    self::log(&mut file, &format!("Starting csharp-ls from {} with args {}", server_uri, server_args));
 
     PLUGIN_RPC.start_lsp(
         server_uri,
