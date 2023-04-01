@@ -1,3 +1,5 @@
+use std::fs::OpenOptions;
+
 use anyhow::{anyhow, Result};
 use lapce_plugin::{
     psp_types::{
@@ -33,6 +35,14 @@ fn initialize(params: InitializeParams) -> Result<()> {
         pattern: Some(string!("**/*.{cs,csx}")),
         scheme: None,
     }];
+
+    let mut file = OpenOptions::new()
+    .append(true)
+    .create(true)
+    .open("csharp_plugin.log")
+    .expect("failed to open file");
+
+    self::log(&mut file, "Reading installed omnisharp version");
 
     let mut server_args = vec![];
 
