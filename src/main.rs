@@ -58,7 +58,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
     //     workspace.
     // }
 
-    let mut log_level = "info";
+    let mut log_level = "warning";
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(volt) = options.get("volt") {
             if let Some(args) = volt.get("serverArgs") {
