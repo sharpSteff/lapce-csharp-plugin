@@ -1,6 +1,6 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Write}, time::SystemTime,
+    io::{Write}, time::SystemTime, path::PathBuf,
 };
 
 
@@ -54,7 +54,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
     //     workspace.
     // }
 
-    let mut log_level = "-l info".to_string();
+    let mut log_level = "--loglevel info".to_string();
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(volt) = options.get("volt") {
             if let Some(args) = volt.get("serverArgs") {
@@ -105,11 +105,28 @@ fn initialize(params: InitializeParams) -> Result<()> {
     }
 
     server_args.push(log_level);
+    let mut server_path =  PathBuf::from("bin_csharpserver");
 
-    let server_uri = match VoltEnvironment::operating_system().as_deref() {
-        | Ok("windows") => ok!(Url::parse("urn:csharp-ls")),
-        | _ => ok!(Url::parse("urn:csharp-ls")),
+    let volt_uri = ok!(VoltEnvironment::uri());
+ 
+    server_path = match VoltEnvironment::operating_system().as_deref() {
+        | Ok("windows") => server_path.join("CSharpLanguageServer.exe"),
+        | _ => server_path.join("CSharpLanguageServer"),
     };
+
+    let server_path_string = match server_path.to_str() {
+        | Some(v) => v,
+        | None => return Err(anyhow!("server_path.to_str() failed")),
+    };
+
+    let server_uri = ok!(ok!(Url::parse(&volt_uri)).join(server_path_string));
+    let args_string = server_args.join(" ");
+    self::log(&mut file, &format!("Starting CSharpLanguageServer from {} with args {}", server_uri, args_string));
+
+    // let server_uri = match VoltEnvironment::operating_system().as_deref() {
+    //     | Ok("windows") => ok!(Url::parse("urn:csharp-ls")),
+    //     | _ => ok!(Url::parse("urn:csharp-ls")),
+    // };
 
     let args_string = server_args.join(" ");
     self::log(&mut file, &format!("Starting csharp-ls from {} with args {}", server_uri, args_string));
