@@ -15,7 +15,7 @@ use lapce_plugin::{
         },
         Request,
     },
-    register_plugin, LapcePlugin, VoltEnvironment, PLUGIN_RPC,
+    register_plugin, LapcePlugin, VoltEnvironment, PLUGIN_RPC, PluginServerRpc,
 };
 use serde_json::Value;
 
@@ -93,8 +93,10 @@ fn initialize(params: InitializeParams) -> Result<()> {
         if let Some(csharp) = options.get("csharp") {
             if let Some(solution) = csharp.get("solution") {
                 if let Some(arg) = solution.as_str() {
-                    let solution_arg = format!("solution {arg}");
-                    server_args.push(solution_arg);
+                    if arg.len() > 0 {
+                        server_args.push("--solution".to_owned());
+                        server_args.push(arg.to_owned())
+                    }   
                 }
             }
         }
@@ -170,14 +172,7 @@ impl LapcePlugin for State {
         #[allow(clippy::single_match)]
         match method.as_str() {
             Initialize::METHOD => {
-                let mut params: InitializeParams = serde_json::from_value(params).unwrap();
-
-                if let Some(td) = &mut params.capabilities.text_document {
-                    if td.publish_diagnostics.is_none() {
-                        td.publish_diagnostics = Some(PublishDiagnosticsClientCapabilities::default());
-                    }
-                }
-
+                let params: InitializeParams = serde_json::from_value(params).unwrap();
                 if let Err(e) = initialize(params) {
                     PLUGIN_RPC.stderr(&format!("plugin returned with error: {e}"))
                 }
