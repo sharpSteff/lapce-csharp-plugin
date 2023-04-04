@@ -1,6 +1,6 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{Read, Write}, time::SystemTime,
+    io::{Write}, time::SystemTime,
 };
 
 
@@ -54,6 +54,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
     //     workspace.
     // }
 
+    let mut log_level = "-l info".to_string();
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(volt) = options.get("volt") {
             if let Some(args) = volt.get("serverArgs") {
@@ -93,7 +94,17 @@ fn initialize(params: InitializeParams) -> Result<()> {
                 }
             }
         }
+
+        if let Some(csharp) = options.get("csharp") {
+            if let Some(solution) = csharp.get("loglevel") {
+                if let Some(arg) = solution.as_str() {
+                    log_level = format!("-l {arg}");
+                }
+            }
+        }
     }
+
+    server_args.push(log_level);
 
     let server_uri = match VoltEnvironment::operating_system().as_deref() {
         | Ok("windows") => ok!(Url::parse("urn:csharp-ls")),
