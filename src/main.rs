@@ -45,7 +45,6 @@ fn initialize(params: InitializeParams) -> Result<()> {
 
     let mut server_args = vec![];
     let mut log_level = "warning";
-    let mut pluginDebug = false;
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(volt) = options.get("volt") {
             if let Some(args) = volt.get("serverArgs") {
@@ -105,7 +104,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
         }
     }
 
-    let mut file: Option<File> = if pluginDebug {
+    let file: Option<File> = if false {
         Some(OpenOptions::new()
         .append(true)
         .create(true)
