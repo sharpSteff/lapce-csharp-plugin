@@ -1,7 +1,6 @@
 use std::{
     fs::{File, OpenOptions},
     io::Write,
-    path::PathBuf,
     time::SystemTime,
 };
 
@@ -10,12 +9,11 @@ use chrono::{DateTime, Utc};
 use lapce_plugin::{
     psp_types::{
         lsp_types::{
-            request::Initialize, DocumentFilter, DocumentSelector, InitializeParams,
-            PublishDiagnosticsClientCapabilities, Url,
+            request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, Url,
         },
         Request,
     },
-    register_plugin, LapcePlugin, VoltEnvironment, PLUGIN_RPC, PluginServerRpc,
+    register_plugin, LapcePlugin, VoltEnvironment, PLUGIN_RPC,
 };
 use serde_json::Value;
 
@@ -45,20 +43,9 @@ fn initialize(params: InitializeParams) -> Result<()> {
         scheme: None,
     }];
 
-    let mut file = OpenOptions::new()
-        .append(true)
-        .create(true)
-        .open("csharp_plugin.log")
-        .expect("failed to open file");
-
     let mut server_args = vec![];
-
-    // // look for solution file
-    // if let Some(workspace) = params.workspace_folders.as_ref() {
-    //     workspace.
-    // }
-
     let mut log_level = "warning";
+    let mut pluginDebug = false;
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(volt) = options.get("volt") {
             if let Some(args) = volt.get("serverArgs") {
@@ -93,7 +80,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
         if let Some(csharp) = options.get("csharp") {
             if let Some(solution) = csharp.get("solution") {
                 if let Some(arg) = solution.as_str() {
-                    if arg.len() > 0 {
+                    if !arg.is_empty() {
                         server_args.push("--solution".to_owned());
                         server_args.push(arg.to_owned())
                     }   
@@ -108,48 +95,45 @@ fn initialize(params: InitializeParams) -> Result<()> {
                 }
             }
         }
+
+        if let Some(csharp) = options.get("csharp") {
+            if let Some(solution) = csharp.get("plugindebug") {
+                if let Some(arg) = solution.as_str() {
+                    log_level = arg;
+                }
+            }
+        }
     }
+
+    let mut file: Option<File> = if pluginDebug {
+        Some(OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("csharp_plugin.log")
+        .expect("failed to open file"))
+        } else {
+        None
+    };
 
     server_args.push("--loglevel".to_owned());
     server_args.push(log_level.to_owned());
-    let mut server_path = PathBuf::from("bin_csharpserver");
-
-    let volt_uri = ok!(VoltEnvironment::uri());
-
-    server_path = match VoltEnvironment::operating_system().as_deref() {
-        Ok("windows") => server_path.join("CSharpLanguageServer.exe"),
-        _ => server_path.join("CSharpLanguageServer"),
+   
+    let server_uri = match VoltEnvironment::operating_system().as_deref() {
+        | Ok("windows") => ok!(Url::parse("urn:csharp-ls")),
+        | _ => ok!(Url::parse("urn:csharp-ls")),
     };
 
-    let server_path_string = match server_path.to_str() {
-        Some(v) => v,
-        None => return Err(anyhow!("server_path.to_str() failed")),
-    };
-
-    let server_uri = ok!(ok!(Url::parse(&volt_uri)).join(server_path_string));
     let args_string = server_args.join(" ");
-    self::log(
-        &mut file,
-        &format!(
-            "Starting CSharpLanguageServer from {} with args {}",
-            server_uri, args_string
-        ),
-    );
-
-    // let server_uri = match VoltEnvironment::operating_system().as_deref() {
-    //     | Ok("windows") => ok!(Url::parse("urn:csharp-ls")),
-    //     | _ => ok!(Url::parse("urn:csharp-ls")),
-    // };
-
-    let args_string = server_args.join(" ");
-    self::log(
-        &mut file,
-        &format!(
-            "Starting csharp-ls from {} with args {}",
-            server_uri, args_string
-        ),
-    );
-
+    if let Some(mut open_file) = file {
+        self::log(
+            &mut open_file,
+            &format!(
+                "Starting csharp-ls from {} with args {}",
+                server_uri, args_string
+            ),
+        );
+    }
+    
     PLUGIN_RPC.start_lsp(
         server_uri,
         server_args,
