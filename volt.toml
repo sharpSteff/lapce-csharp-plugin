@@ -23,6 +23,13 @@ description = "LSP server arguments to pass when launching"
 default = ""
 description = "Path to the solution file"
 
+[config."csharp.loglevel"]
+default = "error"
+description = "the default log level"
+
+[config."csharp.plugindebug"]
+default = "false"
+description = "enables detailed logging about the plugin-lsp interaction"
 
 # [config."lspSettingArray"]
 # default = []

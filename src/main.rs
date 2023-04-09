@@ -44,7 +44,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
     }];
 
     let mut server_args = vec![];
-    let mut log_level = "warning";
+    let mut log_level = "error";
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(volt) = options.get("volt") {
             if let Some(args) = volt.get("serverArgs") {
