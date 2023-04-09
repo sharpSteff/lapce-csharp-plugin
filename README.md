@@ -10,7 +10,8 @@ Install `csharp-ls` and `dotnet-sdk` for .NET 7
 dotnet tool install --global csharp-ls
 ```
 
-## Advanded configuration
+## Advanced configuration
+
 ```toml
 [config."csharp.solution"]
 default = ""
