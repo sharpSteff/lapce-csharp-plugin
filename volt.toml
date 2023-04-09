@@ -1,23 +1,35 @@
 name = "csharp"
-version = "1.1.0"
+version = "2.0.0"
 author = "sharpSteff"
 display-name = "C#"
-description = "C# for lapce using OmniSharp"
+description = "C# for lapce using csharp-ls"
 wasm = "target/wasm32-wasi/release/lapce-plugin-csharp.wasm"
 icon = "logo.png"
 repository = "https://github.com/sharpSteff/lapce-csharp-plugin.git"
 
 [activation]
 language = ["csharp"]
-workspace-contains = ["*/*.csx", "*/*.cs", "*/*.sln", "*/omnisharp.json"]
+workspace-contains = ["*/*.csx", "*/*.cs", "*/*.sln"]
 
 [config."volt.serverPath"]
 default = ""
 description = "Path to custom LSP executable"
 
 [config."volt.serverArgs"]
-default = ["--languageserver"]
+default = [""]
 description = "LSP server arguments to pass when launching"
+
+[config."csharp.solution"]
+default = ""
+description = "Path to the solution file"
+
+[config."csharp.loglevel"]
+default = "error"
+description = "the default log level"
+
+[config."csharp.plugindebug"]
+default = "false"
+description = "enables detailed logging about the plugin-lsp interaction"
 
 # [config."lspSettingArray"]
 # default = []

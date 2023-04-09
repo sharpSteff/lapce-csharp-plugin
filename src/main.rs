@@ -1,7 +1,16 @@
+use std::{
+    fs::{File, OpenOptions},
+    io::Write,
+    time::SystemTime,
+};
+
 use anyhow::{anyhow, Result};
+use chrono::{DateTime, Utc};
 use lapce_plugin::{
     psp_types::{
-        lsp_types::{request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, Url},
+        lsp_types::{
+            request::Initialize, DocumentFilter, DocumentSelector, InitializeParams, Url,
+        },
         Request,
     },
     register_plugin, LapcePlugin, VoltEnvironment, PLUGIN_RPC,
@@ -30,11 +39,12 @@ macro_rules! ok {
 fn initialize(params: InitializeParams) -> Result<()> {
     let document_selector: DocumentSelector = vec![DocumentFilter {
         language: Some(string!("csharp")),
-        pattern: Some(string!("**/*.{cs,csx}")),
+        pattern: Some(string!("**/*.cs")),
         scheme: None,
     }];
-    let mut server_args = vec![string!("--languageserver")];
 
+    let mut server_args = vec![];
+    let mut log_level = "error";
     if let Some(options) = params.initialization_options.as_ref() {
         if let Some(volt) = options.get("volt") {
             if let Some(args) = volt.get("serverArgs") {
@@ -65,13 +75,64 @@ fn initialize(params: InitializeParams) -> Result<()> {
                 }
             }
         }
+
+        if let Some(csharp) = options.get("csharp") {
+            if let Some(solution) = csharp.get("solution") {
+                if let Some(arg) = solution.as_str() {
+                    if !arg.is_empty() {
+                        server_args.push("--solution".to_owned());
+                        server_args.push(arg.to_owned())
+                    }   
+                }
+            }
+        }
+
+        if let Some(csharp) = options.get("csharp") {
+            if let Some(solution) = csharp.get("loglevel") {
+                if let Some(arg) = solution.as_str() {
+                    log_level = arg;
+                }
+            }
+        }
+
+        if let Some(csharp) = options.get("csharp") {
+            if let Some(solution) = csharp.get("plugindebug") {
+                if let Some(arg) = solution.as_str() {
+                    log_level = arg;
+                }
+            }
+        }
     }
 
-    let server_uri = match VoltEnvironment::operating_system().as_deref() {
-        | Ok("windows") => ok!(Url::parse("urn:OmniSharp.exe")),
-        | _ => ok!(Url::parse("urn:OmniSharp")),
+    let file: Option<File> = if false {
+        Some(OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("csharp_plugin.log")
+        .expect("failed to open file"))
+        } else {
+        None
     };
 
+    server_args.push("--loglevel".to_owned());
+    server_args.push(log_level.to_owned());
+   
+    let server_uri = match VoltEnvironment::operating_system().as_deref() {
+        | Ok("windows") => ok!(Url::parse("urn:csharp-ls")),
+        | _ => ok!(Url::parse("urn:csharp-ls")),
+    };
+
+    let args_string = server_args.join(" ");
+    if let Some(mut open_file) = file {
+        self::log(
+            &mut open_file,
+            &format!(
+                "Starting csharp-ls from {} with args {}",
+                server_uri, args_string
+            ),
+        );
+    }
+    
     PLUGIN_RPC.start_lsp(
         server_uri,
         server_args,
@@ -82,7 +143,14 @@ fn initialize(params: InitializeParams) -> Result<()> {
     Ok(())
 }
 
+fn log(file: &mut File, message: &str) {
+    let timestamp = DateTime::<Utc>::from(SystemTime::now());
+    let timestamp_str = timestamp.format("%Y-%m-%d %H:%M:%S").to_string();
+    writeln!(file, "[{}] {}", timestamp_str, message).unwrap();
+}
+
 impl LapcePlugin for State {
+    
     fn handle_request(&mut self, _id: u64, method: String, params: Value) {
         #[allow(clippy::single_match)]
         match method.as_str() {

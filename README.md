@@ -1,21 +1,27 @@
-# Lapce plugin for C# (`OmniSharp`)
+# Lapce plugin for C# (`csharp-ls`)
+
+C# (csharp) Plugin for Lapce powered by [csharp-ls](https://github.com/razzmatazz/csharp-language-server) an alternative, fast LSP to omnisharp.
 
 ## Prerequisites
 
-Install `OmniSharp` and `dotnet-sdk`
-Server needs to be included in `PATH` environment variable
+Install `csharp-ls` and `dotnet-sdk` for .NET 7
 
 ```shell
-curl -LO https://github.com/OmniSharp/omnisharp-roslyn/releases/download/latest/omnisharp-<OS>-net.6.0.<tar.gz/zip>
-
-tar -xzf omnisharp-<OS>-net.6.0.<tar.gz/zip> <PathToInstall>
-
+dotnet tool install --global csharp-ls
 ```
 
-## Available configuration
+## Advanced configuration
 
 ```toml
-[lapce-csharp.volt]
-serverPath = "<custom executable>"
-serverArgs = ["--languageserver"] # --languageserver is required for OmniSharp
+[config."csharp.solution"]
+default = ""
+description = "Path to the solution file"
+
+[config."csharp.loglevel"]
+default = "error"
+description = "the default log level"
+
+[config."csharp.plugindebug"]
+default = "false"
+description = "enables detailed logging about the plugin-lsp interaction"
 ```
