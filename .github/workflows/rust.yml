@@ -38,7 +38,7 @@ jobs:
     #  run: cargo test --verbose --bin lapce-plugin-csharp
     - name: Build release
       run: cargo build -r
-    - name: Publish plugin
-      env:
-         LAPCE_TOKEN: ${{ secrets.VOLTS_API_KEY }}
-      run: volts publish --token $LAPCE_TOKEN
+   #- name: Publish plugin
+   #   env:
+    #     LAPCE_TOKEN: ${{ secrets.VOLTS_API_KEY }}
+   #   run: volts publish --token $LAPCE_TOKEN
